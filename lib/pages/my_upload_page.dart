@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 class MyUploadPage extends StatefulWidget {
-  const MyUploadPage({super.key});
+  final PageController? pageController;
+  const MyUploadPage({Key? key, this.pageController}) : super(key: key);
 
   @override
   State<MyUploadPage> createState() => _MyUploadPageState();
@@ -14,6 +15,22 @@ class _MyUploadPageState extends State<MyUploadPage> {
   var captionController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
   File? _image;
+
+  _uploadNewPost() {
+    String caption = captionController.text.toString().trim();
+    if (caption.isEmpty) return;
+    if (_image == null) return;
+    _moveToFeed();
+  }
+  _moveToFeed() {
+    setState(() {
+      isLoading = false;
+    });
+    captionController.text = "";
+    _image = null;
+    widget.pageController!.animateToPage(
+        0, duration: Duration(microseconds: 200), curve: Curves.easeIn);
+  }
   _imgFromGallery() async {
     XFile? image =
     await _picker.pickImage(source: ImageSource.gallery, imageQuality: 50);
@@ -73,7 +90,7 @@ class _MyUploadPageState extends State<MyUploadPage> {
           actions: [
             IconButton(
               onPressed: () {
-
+                _uploadNewPost();
               },
               icon: Icon(
                 Icons.drive_folder_upload,
