@@ -2,8 +2,15 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+
+
+import '../model/post_model.dart';
+import '../services/db_services.dart';
+import '../services/file_service.dart';
+
 class MyUploadPage extends StatefulWidget {
   final PageController? pageController;
+
   const MyUploadPage({Key? key, this.pageController}) : super(key: key);
 
   @override
@@ -20,8 +27,33 @@ class _MyUploadPageState extends State<MyUploadPage> {
     String caption = captionController.text.toString().trim();
     if (caption.isEmpty) return;
     if (_image == null) return;
-    _moveToFeed();
+    _apiPostImage();
   }
+
+  void _apiPostImage(){
+    setState(() {
+      isLoading = true;
+    });
+    FileService.uploadPostImage(_image!).then((downloadUrl) => {
+      _resPostImage(downloadUrl),
+    });
+  }
+
+  void _resPostImage(String downloadUrl){
+    String caption = captionController.text.toString().trim();
+    Post post = Post(caption, downloadUrl);
+    _apiStorePost(post);
+  }
+
+  void _apiStorePost(Post post)async{
+    // Post to posts
+    Post posted = await DBService.storePost(post);
+    // Post to feeds
+    DBService.storeFeed(posted).then((value) => {
+      _moveToFeed(),
+    });
+  }
+
   _moveToFeed() {
     setState(() {
       isLoading = false;
@@ -31,6 +63,7 @@ class _MyUploadPageState extends State<MyUploadPage> {
     widget.pageController!.animateToPage(
         0, duration: Duration(microseconds: 200), curve: Curves.easeIn);
   }
+
   _imgFromGallery() async {
     XFile? image =
     await _picker.pickImage(source: ImageSource.gallery, imageQuality: 50);
@@ -76,9 +109,10 @@ class _MyUploadPageState extends State<MyUploadPage> {
           );
         });
   }
+
   @override
   Widget build(BuildContext context) {
-    return  Scaffold(
+    return Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
           backgroundColor: Colors.white,
