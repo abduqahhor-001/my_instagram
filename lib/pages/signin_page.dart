@@ -1,156 +1,186 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_myinsta/pages/home_page.dart';
 import 'package:flutter_myinsta/pages/signup_page.dart';
 
-class SigninPage extends StatefulWidget {
+import '../services/auth_service.dart';
+import '../services/utils_service.dart';
+import 'home_page.dart';
+
+class SignInPage extends StatefulWidget {
   static final String id = "signin_page";
-  const SigninPage({super.key});
+
+  const SignInPage({Key? key}) : super(key: key);
 
   @override
-  State<SigninPage> createState() => _SigninPageState();
+  State<SignInPage> createState() => _SignInPageState();
 }
 
-class _SigninPageState extends State<SigninPage> {
+class _SignInPageState extends State<SignInPage> {
   var isLoading = false;
   var emailController = TextEditingController();
-  var passwordContoller = TextEditingController();
+  var passwordController = TextEditingController();
 
+  _doSignIn() async {
+    String email = emailController.text.toString().trim();
+    String password = passwordController.text.toString().trim();
 
-  _doSignIn(){
-      String email = emailController.text.toString().trim();
-      String password = passwordContoller.text.toString().trim();
-      if(email.isEmpty || password.isEmpty) return;
-      
+    if (email.isEmpty || password.isEmpty) {
+      Utils.fireToast("Please fill all fields");
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    var user = await AuthService.signInUser(email, password);
+    _responseSignIn(user);
+  }
+
+  _responseSignIn(User? user) {
+    setState(() {
+      isLoading = false;
+    });
+
+    if (user != null) {
       Navigator.pushReplacementNamed(context, HomePage.id);
+    } else {
+      Utils.fireToast("Sign In failed. Please check your credentials.");
+    }
   }
 
-  _callSignUp(){
-    Navigator.pushReplacementNamed(context, SignupPage.id);
+  _callSignUpPage() {
+    Navigator.pushReplacementNamed(context, SignUpPage.id);
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Container(
-          width: MediaQuery.of(context).size.width,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color.fromRGBO(232, 150, 94, 1.0),
-                  Color.fromRGBO(211, 102, 64, 1.0),
-                ]
-            ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: <Widget>[
-              Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(20),
-
-                        child: Column(
-
-                          children: [
-                            Text("Instagram", style: TextStyle(color: Colors.white, fontSize: 50,fontFamily: "Billabong"),),
-
-                            SizedBox(
-                              height: 20,
-                            ),
-
-                            Container(
-                              padding: EdgeInsets.only(left: 10 , right: 10),
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: Color.fromRGBO(206, 150, 108, 1.0),
-                                borderRadius: BorderRadius.circular(8),
-
-                              ),
-                              child: TextField(
-                                controller: emailController,
-                                style: TextStyle(fontSize : 16, color:  Colors.white),
-                                decoration: InputDecoration(
-                                  hintText: "Email",
-                                  border: InputBorder.none,
-                                  hintStyle: TextStyle(fontSize: 17 ,color: Colors.white24),
-                                ),
-                              ),
-                            ),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            Container(
-                              padding: EdgeInsets.only(left: 10 , right: 10),
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: Color.fromRGBO(206, 150, 108, 1.0),
-                                borderRadius: BorderRadius.circular(8),
-
-                              ),
-                              child: TextField(
-                                controller: passwordContoller,
-                                obscureText: true,
-                                style: TextStyle(fontSize : 16, color:  Colors.white),
-                                decoration: InputDecoration(
-
-                                  hintText: "password",
-                                  border: InputBorder.none,
-                                  hintStyle: TextStyle(fontSize: 17 ,color: Colors.white24),
-                                ),
-                              ),
-                            ),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            GestureDetector(
-                              onTap: (){
-                                _doSignIn();
-                              },
-                              child: Container(
-
-                                padding: EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  border: Border.all(width: 1.0 ,color: Color.fromRGBO(206, 150, 108, 1.0)),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-
-                                child: Center(
-                                  child:  Text("Sign in",style: TextStyle(fontSize: 17 ,color: Colors.white24),),
-                                )
-
-
-                              ),
-                            )
-                          ],
+      body: Container(
+        padding: EdgeInsets.all(20),
+        width: MediaQuery.of(context).size.width,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color.fromRGBO(193, 53, 132, 1),
+                Color.fromRGBO(131, 58, 180, 1),
+              ]),
+        ),
+        child: Stack(
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Instagram",
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 45,
+                              fontFamily: "Billabong"),
                         ),
 
-                      )
-                    ],
-                  )
-              ),
-             GestureDetector(
-               onTap: (){
-                 _callSignUp();
-               },
-               child:  Row(
-                 mainAxisAlignment: MainAxisAlignment.center,
-                 children: [
-                   Text("Don't have an account?",style: TextStyle(color: Colors.white,fontSize: 16 ),),
-                   Text("Sign up",style: TextStyle(color: Colors.white,fontSize: 16 , fontWeight: FontWeight.bold ),),
+                        //#email
+                        Container(
+                          margin: EdgeInsets.only(top: 10),
+                          height: 50,
+                          padding: EdgeInsets.only(left: 10, right: 10),
+                          decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(7)),
+                          child: TextField(
+                            controller: emailController,
+                            style: TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                                hintText: "Email",
+                                border: InputBorder.none,
+                                hintStyle:
+                                TextStyle(fontSize: 17, color: Colors.white54)),
+                          ),
+                        ),
 
-                 ],
-               ),
-             ),
-              SizedBox(
-                height: 20,
-              ),
-            ],
-          ),
-        )
+                        //#password
+                        Container(
+                          margin: EdgeInsets.only(top: 10),
+                          height: 50,
+                          padding: EdgeInsets.only(left: 10, right: 10),
+                          decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(7)),
+                          child: TextField(
+                            controller: passwordController,
+                            obscureText: true,
+                            style: TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                                hintText: "Password",
+                                border: InputBorder.none,
+                                hintStyle:
+                                TextStyle(fontSize: 17, color: Colors.white54)),
+                          ),
+                        ),
+
+                        //#signin
+                        GestureDetector(
+                          onTap: () {
+                            _doSignIn();
+                          },
+                          child: Container(
+                              margin: EdgeInsets.only(top: 10),
+                              height: 50,
+                              padding: EdgeInsets.only(left: 10, right: 10),
+                              decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(7)),
+                              child: Center(
+                                child: Text(
+                                  "Sign In",
+                                  style:
+                                  TextStyle(color: Colors.white, fontSize: 17),
+                                ),
+                              )),
+                        ),
+                      ],
+                    )),
+                Container(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Don`t have an account?",
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      GestureDetector(
+                          onTap: () {
+                            _callSignUpPage();
+                          },
+                          child: Text(
+                            "Sign Up",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold),
+                          )),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            isLoading
+                ? Center(
+              child: CircularProgressIndicator(),
+            )
+                : SizedBox.shrink(),
+          ],
+        ),
+      ),
     );
   }
 }

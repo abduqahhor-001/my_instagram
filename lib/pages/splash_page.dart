@@ -30,7 +30,7 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   _callSignInPage(){
-    Navigator.pushNamed(context,SigninPage.id );
+    Navigator.pushNamed(context,SignInPage.id );
   }
 
   _callHomePage(){

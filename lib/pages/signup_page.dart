@@ -1,210 +1,246 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_myinsta/pages/signin_page.dart';
-import 'package:flutter_myinsta/services/utils_service.dart';
 
+import '../model/member_model.dart';
+import '../services/auth_service.dart';
+import '../services/db_services.dart';
+import '../services/utils_service.dart';
 import 'home_page.dart';
 
-class SignupPage extends StatefulWidget {
+class SignUpPage extends StatefulWidget {
   static final String id = "signup_page";
-  const SignupPage({super.key});
+
+  const SignUpPage({Key? key}) : super(key: key);
 
   @override
-  State<SignupPage> createState() => _SignupPageState();
+  State<SignUpPage> createState() => _SignUpPageState();
 }
 
-class _SignupPageState extends State<SignupPage> {
+class _SignUpPageState extends State<SignUpPage> {
   var isLoading = false;
-
-  var fullNameController = TextEditingController();
+  var fullnameController = TextEditingController();
   var emailController = TextEditingController();
-  var passwordContoller = TextEditingController();
-  var cPasswordContoller = TextEditingController();
+  var passwordController = TextEditingController();
+  var cpasswordController = TextEditingController();
 
-  _doSignUp(){
-    String fullName = fullNameController.text.toString().trim();
+  final RegExp emailRegExp = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+  final RegExp passwordRegExp = RegExp(
+      r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$');
+
+  _doSignUp() async {
+    String fullname = fullnameController.text.toString().trim();
     String email = emailController.text.toString().trim();
-    String password = passwordContoller.text.toString().trim();
-    String cPassword = cPasswordContoller.text.toString().trim();
-    if(email.isEmpty || password.isEmpty || cPassword.isEmpty || fullName.isEmpty) return;
+    String password = passwordController.text.toString().trim();
+    String cpassword = cpasswordController.text.toString().trim();
 
-    if(password != cPassword){
-      Utils.fireToast("iltimos parol va qayta parolni bir hil kirgazing");
-      return ;
+    if (fullname.isEmpty || email.isEmpty || password.isEmpty) {
+      Utils.fireToast("Please fill all fields");
+      return;
     }
 
+    if (!emailRegExp.hasMatch(email)) {
+      Utils.fireToast("Invalid email format");
+      return;
+    }
+
+    if (!passwordRegExp.hasMatch(password)) {
+      Utils.fireToast("Password must be at least 8 characters, include an uppercase letter, a lowercase letter, a digit, and a special character");
+      return;
+    }
+
+    if (cpassword != password) {
+      Utils.fireToast("Password and confirm password do not match");
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    var response = await AuthService.signUpUser(fullname, email, password);
+    Member member = Member(fullname, email);
+    DBService.storeMember(member).then((value) => {
+      storeMemberToDB(member),
+    });
+  }
+
+  void storeMemberToDB(Member member) {
+    setState(() {
+      isLoading = false;
+    });
     Navigator.pushReplacementNamed(context, HomePage.id);
   }
-  _callSignIn(){
-    Navigator.pushReplacementNamed(context, SigninPage.id);
+
+  _callSignInPage() {
+    Navigator.pushReplacementNamed(context, SignInPage.id);
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Container(
-          width: MediaQuery.of(context).size.width,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color.fromRGBO(232, 150, 94, 1.0),
-                  Color.fromRGBO(211, 102, 64, 1.0),
-                ]
-            ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: <Widget>[
-              Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(20),
-
-                        child: Column(
-
-                          children: [
-                            Text("Instagram", style: TextStyle(color: Colors.white, fontSize: 50,fontFamily: "Billabong"),),
-
-                            SizedBox(
-                              height: 20,
-                            ),
-                            Container(
-                              padding: EdgeInsets.only(left: 10 , right: 10),
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: Color.fromRGBO(206, 150, 108, 1.0),
-                                borderRadius: BorderRadius.circular(8),
-
-                              ),
-                              child: TextField(
-                                controller: fullNameController,
-                                style: TextStyle(fontSize : 16, color:  Colors.white),
-                                decoration: InputDecoration(
-                                  hintText: "Fullname",
-                                  border: InputBorder.none,
-                                  hintStyle: TextStyle(fontSize: 17 ,color: Colors.white24),
-                                ),
-                              ),
-                            ),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            Container(
-                              padding: EdgeInsets.only(left: 10 , right: 10),
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: Color.fromRGBO(206, 150, 108, 1.0),
-                                borderRadius: BorderRadius.circular(8),
-
-                              ),
-                              child: TextField(
-                                controller: emailController,
-                                style: TextStyle(fontSize : 16, color:  Colors.white),
-                                decoration: InputDecoration(
-                                  hintText: "Email",
-                                  border: InputBorder.none,
-                                  hintStyle: TextStyle(fontSize: 17 ,color: Colors.white24),
-                                ),
-                              ),
-                            ),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            Container(
-                              padding: EdgeInsets.only(left: 10 , right: 10),
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: Color.fromRGBO(206, 150, 108, 1.0),
-                                borderRadius: BorderRadius.circular(8),
-
-                              ),
-                              child: TextField(
-                                controller: passwordContoller,
-                                obscureText: true,
-                                style: TextStyle(fontSize : 16, color:  Colors.white),
-                                decoration: InputDecoration(
-
-                                  hintText: "password",
-                                  border: InputBorder.none,
-                                  hintStyle: TextStyle(fontSize: 17 ,color: Colors.white24),
-                                ),
-                              ),
-                            ),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            Container(
-                              padding: EdgeInsets.only(left: 10 , right: 10),
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: Color.fromRGBO(206, 150, 108, 1.0),
-                                borderRadius: BorderRadius.circular(8),
-
-                              ),
-                              child: TextField(
-                                controller: cPasswordContoller,
-                                obscureText: true,
-                                style: TextStyle(fontSize : 16, color:  Colors.white),
-                                decoration: InputDecoration(
-
-                                  hintText: "Confirm password",
-                                  border: InputBorder.none,
-                                  hintStyle: TextStyle(fontSize: 17 ,color: Colors.white24),
-                                ),
-                              ),
-                            ),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            GestureDetector(
-                              onTap: (){
-                                _doSignUp();
-                              },
-                              child: Container(
-
-                                  padding: EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(width: 1.0 ,color: Color.fromRGBO(206, 150, 108, 1.0)),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-
-                                  child: Center(
-                                    child:  Text("Sign up",style: TextStyle(fontSize: 17 ,color: Colors.white24),),
-                                  )
-
-
-                              ),
-                            )
-                          ],
-                        ),
-
-                      )
-                    ],
-                  )
-              ),
-              GestureDetector(
-                onTap: (){
-                  _callSignIn();
-                },
-                child:  Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text("Alread have an account?",style: TextStyle(color: Colors.white,fontSize: 16 ),),
-                    Text("Sign in",style: TextStyle(color: Colors.white,fontSize: 16 , fontWeight: FontWeight.bold ),),
-
-                  ],
-                ),
-              ),
-              SizedBox(
-                height: 20,
-              ),
+      body: Container(
+        padding: EdgeInsets.all(20),
+        width: MediaQuery.of(context).size.width,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color.fromRGBO(193, 53, 132, 1),
+              Color.fromRGBO(131, 58, 180, 1),
             ],
           ),
-        )
+        ),
+        child: Stack(
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Instagram",
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 45,
+                            fontFamily: "Billabong"),
+                      ),
+                      //#fullname
+                      Container(
+                        margin: EdgeInsets.only(top: 10),
+                        height: 50,
+                        padding: EdgeInsets.only(left: 10, right: 10),
+                        decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(7)),
+                        child: TextField(
+                          controller: fullnameController,
+                          style: TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                              hintText: "Fullname",
+                              border: InputBorder.none,
+                              hintStyle: TextStyle(
+                                  fontSize: 17, color: Colors.white54)),
+                        ),
+                      ),
+                      //#email
+                      Container(
+                        margin: EdgeInsets.only(top: 10),
+                        height: 50,
+                        padding: EdgeInsets.only(left: 10, right: 10),
+                        decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(7)),
+                        child: TextField(
+                          controller: emailController,
+                          style: TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                              hintText: "Email",
+                              border: InputBorder.none,
+                              hintStyle: TextStyle(
+                                  fontSize: 17, color: Colors.white54)),
+                        ),
+                      ),
+                      //#password
+                      Container(
+                        margin: EdgeInsets.only(top: 10),
+                        height: 50,
+                        padding: EdgeInsets.only(left: 10, right: 10),
+                        decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(7)),
+                        child: TextField(
+                          controller: passwordController,
+                          obscureText: true,
+                          style: TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                              hintText: "Password",
+                              border: InputBorder.none,
+                              hintStyle: TextStyle(
+                                  fontSize: 17, color: Colors.white54)),
+                        ),
+                      ),
+                      //#cpassword
+                      Container(
+                        margin: EdgeInsets.only(top: 10),
+                        height: 50,
+                        padding: EdgeInsets.only(left: 10, right: 10),
+                        decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(7)),
+                        child: TextField(
+                          controller: cpasswordController,
+                          obscureText: true,
+                          style: TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                              hintText: "Confirm Password",
+                              border: InputBorder.none,
+                              hintStyle: TextStyle(
+                                  fontSize: 17, color: Colors.white54)),
+                        ),
+                      ),
+                      //#signin
+                      GestureDetector(
+                        onTap: () {
+                          _doSignUp();
+                        },
+                        child: Container(
+                            margin: EdgeInsets.only(top: 10),
+                            height: 50,
+                            padding: EdgeInsets.only(left: 10, right: 10),
+                            decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(7)),
+                            child: Center(
+                              child: Text(
+                                "Sign Up",
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 17),
+                              ),
+                            )),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Already have an account?",
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      GestureDetector(
+                          onTap: () {
+                            _callSignInPage();
+                          },
+                          child: Text(
+                            "Sign In",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold),
+                          )),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            isLoading
+                ? Center(
+              child: CircularProgressIndicator(),
+            )
+                : SizedBox.shrink(),
+          ],
+        ),
+      ),
     );
   }
-
 }
