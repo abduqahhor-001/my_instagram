@@ -1,7 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:eva_icons_flutter/eva_icons_flutter.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
+import 'package:share_plus/share_plus.dart';
 
 import '../model/post_model.dart';
 import '../services/db_services.dart';
@@ -71,6 +72,11 @@ class _MyFeedPageState extends State<MyFeedPage> {
         _apiLoadFeeds(),
       });
     }
+  }
+
+  /// Postni share qilish uchun metod
+  _sharePost(Post post) {
+    Share.share('Check out this post: ${post.caption}\n\n${post.img_post}');
   }
 
   @override
@@ -221,7 +227,9 @@ class _MyFeedPageState extends State<MyFeedPage> {
                     ),
                   ),
                   IconButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      _sharePost(post);  // Share tugmasi bosilganda postni bo'lishish
+                    },
                     icon: Icon(
                       EvaIcons.shareOutline,
                     ),

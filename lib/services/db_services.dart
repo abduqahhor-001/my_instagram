@@ -192,6 +192,48 @@ class DBService {
     });
     return posts;
   }
+  static Future<Member> loadMemberById(String userId) async {
+    var docSnapshot = await _firestore.collection(folder_users).doc(userId).get();
+
+    if (docSnapshot.exists) {
+      Member member = Member.fromJson(docSnapshot.data()!);
+
+      // Load follower and following counts if necessary
+      var followersSnapshot = await _firestore
+          .collection(folder_users)
+          .doc(userId)
+          .collection(folder_followers)
+          .get();
+      member.followers_count = followersSnapshot.docs.length;
+
+      var followingSnapshot = await _firestore
+          .collection(folder_users)
+          .doc(userId)
+          .collection(folder_following)
+          .get();
+      member.following_count = followingSnapshot.docs.length;
+
+      return member;
+    } else {
+      throw Exception("User not found");
+    }
+  }
+  static Future<List<Post>> loadUserPosts(String userId) async {
+    List<Post> posts = [];
+
+    var querySnapshot = await _firestore
+        .collection(folder_users)
+        .doc(userId)
+        .collection(folder_posts)
+        .get();
+
+    querySnapshot.docs.forEach((result) {
+      Post post = Post.fromJson(result.data());
+      posts.add(post);
+    });
+
+    return posts;
+  }
 
   static Future<Member> followMember(Member someone) async {
     Member me = await loadMember();
